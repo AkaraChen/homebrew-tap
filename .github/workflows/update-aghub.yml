@@ -1,0 +1,65 @@
+name: update aghub cask
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "aghub version to update to, for example 1.2.3 or v1.2.3. Leave empty for latest."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Update cask
+        env:
+          AGHUB_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/update-aghub.sh "${AGHUB_VERSION:-latest}"
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Register local tap
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/akarachen/homebrew-tap"
+          rm -rf "$tap_dir"
+          mkdir -p "$(dirname "$tap_dir")"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+
+      - name: Check cask
+        run: |
+          brew style --cask "$(brew --repository)/Library/Taps/akarachen/homebrew-tap/Casks/aghub.rb"
+          brew audit --cask --strict --online aghub
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- Casks/aghub.rb; then
+            echo "aghub cask is already up to date."
+            exit 0
+          fi
+
+          version="$(sed -n 's/^  version "\(.*\)"/\1/p' Casks/aghub.rb)"
+          branch="update-aghub-${version}-${GITHUB_RUN_ID}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${branch}"
+          git add Casks/aghub.rb
+          git commit -m "chore: update aghub to ${version}"
+          git push origin "${branch}"
+
+          gh pr create \
+            --base main \
+            --head "${branch}" \
+            --title "Update aghub to ${version}" \
+            --body "Updates the aghub cask to ${version} using scripts/update-aghub.sh."
