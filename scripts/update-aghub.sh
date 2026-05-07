@@ -30,14 +30,16 @@ need() {
 }
 
 sha256_file() {
-  if command -v sha256sum >/dev/null 2>&1; then
+  if command -v sha256sum >/dev/null 2>&1
+  then
     sha256sum "$1" | awk '{print $1}'
   else
     shasum -a 256 "$1" | awk '{print $1}'
   fi
 }
 
-if [[ "${requested_version}" == "-h" || "${requested_version}" == "--help" ]]; then
+if [[ "${requested_version}" == "-h" || "${requested_version}" == "--help" ]]
+then
   usage
   exit 0
 fi
@@ -46,10 +48,12 @@ need gh
 need awk
 need grep
 need mktemp
+need ruby
 
 [[ -f "${cask_file}" ]] || die "cask file not found: ${cask_file}"
 
-if [[ -z "${requested_version}" || "${requested_version}" == "latest" ]]; then
+if [[ -z "${requested_version}" || "${requested_version}" == "latest" ]]
+then
   endpoint="repos/${repo}/releases/latest"
 else
   tag="${requested_version}"
@@ -86,48 +90,26 @@ intel_file="${tmpdir}/${intel_asset}"
 arm_sha="$(sha256_file "${arm_file}")"
 intel_sha="$(sha256_file "${intel_file}")"
 
-tmp_cask="$(mktemp)"
-awk \
-  -v version="${version}" \
-  -v arm_sha="${arm_sha}" \
-  -v intel_sha="${intel_sha}" \
-  '
-  BEGIN {
-    version_count = 0
-    sha_count = 0
-  }
+ruby - "${cask_file}" "${version}" "${arm_sha}" "${intel_sha}" <<'RUBY'
+path, version, arm_sha, intel_sha = ARGV
+content = File.read(path)
 
-  /^  version "/ {
-    print "  version \"" version "\""
-    version_count++
-    next
-  }
+unless content.scan(/^  version "/).length == 1
+  abort "expected exactly one version stanza in #{path}"
+end
 
-  /^  sha256 arm:/ {
-    print "  sha256 arm:   \"" arm_sha "\","
-    if (getline <= 0) {
-      exit 41
-    }
-    print "         intel: \"" intel_sha "\""
-    sha_count++
-    next
-  }
+unless content.scan(/^  sha256 arm:/).length == 1
+  abort "expected exactly one dual-arch sha256 stanza in #{path}"
+end
 
-  {
-    print
-  }
+content = content.sub(/^  version ".*"$/, %(  version "#{version}"))
+content = content.sub(
+  /^  sha256 arm:\s+"[0-9a-f]{64}",\n\s+intel:\s+"[0-9a-f]{64}"$/,
+  %(  sha256 arm:   "#{arm_sha}",\n         intel: "#{intel_sha}"),
+)
 
-  END {
-    if (version_count != 1 || sha_count != 1) {
-      exit 42
-    }
-  }
-  ' "${cask_file}" >"${tmp_cask}" || {
-    rm -f "${tmp_cask}"
-    die "failed to update ${cask_file}; cask format may have changed"
-  }
-
-mv "${tmp_cask}" "${cask_file}"
+File.write(path, content)
+RUBY
 
 echo "Updated ${cask_file}"
 echo "  version: ${version}"
