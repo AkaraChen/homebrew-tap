@@ -34,9 +34,9 @@ jobs:
           mkdir -p "$(dirname "$tap_dir")"
           ln -s "$GITHUB_WORKSPACE" "$tap_dir"
 
-      - name: Check cask
+      - name: Check tap
         run: |
-          brew style --cask "$(brew --repository)/Library/Taps/akarachen/homebrew-tap/Casks/aghub.rb"
+          brew style akarachen/tap
           brew audit --cask --strict --online aghub
 
       - name: Create pull request
