@@ -1,0 +1,29 @@
+name: brew test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Register local tap
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/akarachen/homebrew-tap"
+          rm -rf "$tap_dir"
+          mkdir -p "$(dirname "$tap_dir")"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+
+      - name: Check tap syntax
+        run: brew test-bot --only-tap-syntax --tap=akarachen/tap
+
+      - name: Audit casks
+        run: brew audit --cask --strict --online aghub
