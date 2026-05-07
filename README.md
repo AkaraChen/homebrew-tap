@@ -10,11 +10,20 @@ Install the macOS app:
 brew install --cask akarachen/tap/aghub
 ```
 
+## 2code
+
+Install the macOS app:
+
+```sh
+brew install --cask akarachen/tap/2code
+```
+
 Or add the tap first:
 
 ```sh
 brew tap akarachen/tap
 brew install --cask aghub
+brew install --cask 2code
 ```
 
 ## Updating aghub

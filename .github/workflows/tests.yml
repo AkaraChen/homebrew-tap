@@ -26,4 +26,4 @@ jobs:
         run: brew test-bot --only-tap-syntax --tap=akarachen/tap
 
       - name: Audit casks
-        run: brew audit --cask --strict --online aghub
+        run: brew audit --cask --strict --online 2code aghub
