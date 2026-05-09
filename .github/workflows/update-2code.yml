@@ -1,0 +1,65 @@
+name: update 2code cask
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "2code version to update to, for example 1.2.3 or v1.2.3. Leave empty for latest."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Update cask
+        env:
+          TWOCODE_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/update-2code.sh "${TWOCODE_VERSION:-latest}"
+
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+
+      - name: Register local tap
+        run: |
+          tap_dir="$(brew --repository)/Library/Taps/akarachen/homebrew-tap"
+          rm -rf "$tap_dir"
+          mkdir -p "$(dirname "$tap_dir")"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir"
+
+      - name: Check tap
+        run: |
+          brew style akarachen/tap
+          brew audit --cask --strict --online 2code
+
+      - name: Create pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- Casks/2code.rb; then
+            echo "2code cask is already up to date."
+            exit 0
+          fi
+
+          version="$(sed -n 's/^  version "\(.*\)"/\1/p' Casks/2code.rb)"
+          branch="update-2code-${version}-${GITHUB_RUN_ID}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "${branch}"
+          git add Casks/2code.rb
+          git commit -m "chore: update 2code to ${version}"
+          git push origin "${branch}"
+
+          gh pr create \
+            --base main \
+            --head "${branch}" \
+            --title "Update 2code to ${version}" \
+            --body "Updates the 2code cask to ${version} using scripts/update-2code.sh."

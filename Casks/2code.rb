@@ -1,8 +1,11 @@
 cask "2code" do
-  version "1.4.2"
-  sha256 "f25b21d80a3829a70e46b74f925f337f24aa6959a664c5f68b280e65fe91946b"
+  arch arm: "aarch64", intel: "x64"
 
-  url "https://github.com/AkaraChen/2code/releases/download/v#{version}/two-code_#{version}_aarch64.dmg",
+  version "2.0.0"
+  sha256 arm:   "8f5fc4f3924081abd924ae0587c3f480a5e440499e353159047d0499c3557796",
+         intel: "3461886357118e6e01e0a3309e913582e5651ed00cdccc64ba8e97f896a407fa"
+
+  url "https://github.com/AkaraChen/2code/releases/download/v#{version}/2code_#{version}_#{arch}.dmg",
       verified: "github.com/AkaraChen/2code/"
   name "2code"
   name "two-code"
@@ -14,13 +17,11 @@ cask "2code" do
     strategy :github_latest
   end
 
-  depends_on arch: :arm64
-
-  app "two-code.app"
+  app "2code.app"
 
   postflight do
     system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/two-code.app"]
+                   args: ["-dr", "com.apple.quarantine", "#{appdir}/2code.app"]
   end
 
   zap trash: [

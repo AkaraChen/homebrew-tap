@@ -26,15 +26,17 @@ brew install --cask aghub
 brew install --cask 2code
 ```
 
-## Updating aghub
+## Updating casks
 
-Run the `update aghub cask` GitHub Actions workflow manually. It downloads the
-latest macOS app release assets, updates the cask version and SHA-256 values,
-and opens a pull request.
+Run the `update aghub cask` or `update 2code cask` GitHub Actions workflow
+manually. It updates the cask version and SHA-256 values from the latest macOS
+app release assets, then opens a pull request.
 
-To run the updater locally:
+To run the updaters locally:
 
 ```sh
 scripts/update-aghub.sh
 scripts/update-aghub.sh 1.2.3
+scripts/update-2code.sh
+scripts/update-2code.sh 1.2.3
 ```
