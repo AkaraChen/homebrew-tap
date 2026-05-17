@@ -1,9 +1,9 @@
 cask "2code" do
   arch arm: "aarch64", intel: "x64"
 
-  version "2.0.0"
-  sha256 arm:   "8f5fc4f3924081abd924ae0587c3f480a5e440499e353159047d0499c3557796",
-         intel: "3461886357118e6e01e0a3309e913582e5651ed00cdccc64ba8e97f896a407fa"
+  version "2.1.0"
+  sha256 arm:   "b6ac40172a35841edc633fa16f6b730cb65477a618bf55712e7e681f4d14e24f",
+         intel: "0c56357e4b252fdcad9b5682fcfcd22b123504a504872287778c270006652aa6"
 
   url "https://github.com/AkaraChen/2code/releases/download/v#{version}/2code_#{version}_#{arch}.dmg",
       verified: "github.com/AkaraChen/2code/"
@@ -16,6 +16,8 @@ cask "2code" do
     url "https://github.com/AkaraChen/2code"
     strategy :github_latest
   end
+
+  depends_on :macos
 
   app "2code.app"
 

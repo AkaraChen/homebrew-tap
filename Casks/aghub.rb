@@ -2,8 +2,8 @@ cask "aghub" do
   arch arm: "aarch64", intel: "x64"
 
   version "1.1.0"
-  sha256 arm:   "29a2ed107f337e01ae7271effb1f12b75ef3bde148f64036b0b2c761a49e7da7",
-         intel: "e9e38bf12d1f4d1afb87ae4b68bde90e6e0d83ac4a5cebfa2cb20eb70f369182"
+  sha256 arm:   "857d9b3c9128d5196ca8bf0db2e2c76350d03178c7ac6aaa123966eb78b7d304",
+         intel: "8c7d379398283c50e58485b132ac73afa7a9250150c214a3d024b5793955ab2a"
 
   url "https://github.com/AkaraChen/aghub/releases/download/v#{version}/aghub_#{arch}.app.tar.gz",
       verified: "github.com/AkaraChen/aghub/"
@@ -15,6 +15,8 @@ cask "aghub" do
     url "https://github.com/AkaraChen/aghub"
     strategy :github_latest
   end
+
+  depends_on :macos
 
   app "aghub.app"
 
